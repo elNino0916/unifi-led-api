@@ -1,6 +1,6 @@
 # UniFi LED API
 
-An unofficial Python API to control LED status on UniFi devices (access points, switches, etc.) via undocumented REST APIs.
+An unofficial Python API to control LED status on UniFi devices (access points) via undocumented REST APIs.
 
 ## Features
 
