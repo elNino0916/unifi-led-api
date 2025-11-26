@@ -1,9 +1,16 @@
+![Python Version](https://img.shields.io/badge/python-3.6%2B-blue)
+![UniFi OS](https://img.shields.io/badge/UniFi%20OS%20Version-Tested%20with%205.0.5%20(EA)-darkgreen)
+
 <img width="87" height="92" alt="image" src="https://github.com/user-attachments/assets/97ce17f4-45a0-42b2-a3b1-81616112edc1" />
 
 # UniFi LED API
 
-An unofficial Python API to control LED status on UniFi devices (access points) via undocumented REST APIs.
-
+UniFi has never implemented a proper night mode scheduler for Access Points — despite users requesting it for years.
+This project fills that gap with a lightweight, reliable Python-based API that sends PUT requests to the internal REST API of the AP.
+Tested on U7 Pro and U6+.
+> [!NOTE] 
+> Modern UniFi APs (U6/U7 series) support LED override ON/OFF only.  
+> Color and brightness overrides are ignored by firmware.
 ## Features
 
 - Turn device LEDs on or off programmatically
@@ -63,13 +70,13 @@ UNIFI_USER=USERNAME UNIFI_PASS='PASSWORD' UNIFI_CONTROLLER='https://192.168.1.1'
 Turn off LEDs every night at 10 PM:
 
 ```bash
-0 22 * * * . /path/to/set_env.sh && /usr/bin/python3 /path/to/start.py led off
+0 22 * * * bash -c 'source /path/to/set_env.sh && /usr/bin/python3 /path/to/start.py led off'
 ```
 
 Turn on LEDs every morning at 7 AM:
 
 ```bash
-0 7 * * * . /path/to/set_env.sh && /usr/bin/python3 /path/to/start.py led on
+0 7 * * * bash -c 'source /path/to/set_env.sh && /usr/bin/python3 /path/to/start.py led on'
 ```
 
 ## LED Payload Configuration
@@ -79,7 +86,9 @@ The `led_on.json` and `led_off.json` files contain the device configuration payl
 - `led_override`: `"on"` or `"off"`
 - `led_override_color`: LED color in hex format (e.g., `"#0000ff"`) **(Only older APs)**
 - `led_override_color_brightness`: Brightness percentage (e.g., `"100"`) **(Only on some newer APs if it even works in the first place.)**
-- **DO NOT CHANGE ANY OTHER SETTINGS UNLESS YOU KNOW WHAT YOU ARE DOING!**
+> [!CAUTION]  
+> Do NOT modify anything in the JSON files except the LED fields.  
+> Changing other values can break your device configuration.
 
 ## Troubleshooting
 
