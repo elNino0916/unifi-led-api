@@ -1,6 +1,6 @@
 # UniFi LED API
 
-An unofficial Python API to control LED status on UniFi devices (access points, switches, etc.) via the UniFi Controller API.
+An unofficial Python API to control LED status on UniFi devices (access points, switches, etc.) via undocumented REST APIs.
 
 ## Features
 
@@ -32,7 +32,7 @@ An unofficial Python API to control LED status on UniFi devices (access points, 
 
 ## Configuration
 
-Instructions can be found in the wiki.
+Instructions can be found in the [wiki](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files).
 
 ## Usage
 
@@ -93,7 +93,11 @@ If you're using a self-signed certificate, set `UNIFI_VERIFY_SSL=false`
 
 ### CSRF Token Errors
 
-The API automatically handles CSRF tokens. If you encounter issues, ensure your controller is running a compatible version.
+The API automatically handles CSRF tokens. If you encounter issues, ensure your controller is running a compatible version.+
+
+### Other errors / config changes
+
+You have not updated your json files after a config change / update. Please check out [Step 1](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files) to recreate the json files.
 
 ## License
 
