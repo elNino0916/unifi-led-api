@@ -1,3 +1,5 @@
+<img width="87" height="92" alt="image" src="https://github.com/user-attachments/assets/97ce17f4-45a0-42b2-a3b1-81616112edc1" />
+
 # UniFi LED API
 
 An unofficial Python API to control LED status on UniFi devices (access points) via undocumented REST APIs.
