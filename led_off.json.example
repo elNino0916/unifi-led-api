@@ -1,0 +1,55 @@
+{
+  "name": "U7 Pro",
+  "snmp_contact": "",
+  "snmp_location": "",
+  "mgmt_network_id": "<put your mgmt network id here>",
+  "afc_enabled": false,
+  "outdoor_mode_override": "default",
+  "led_override": "off",
+  "led_override_color": "#0000ff",
+  "led_override_color_brightness": "100",
+  "atf_enabled": false,
+  "config_network": {
+    "type": "dhcp",
+    "bonding_enabled": false
+  },
+  "mesh_sta_vap_enabled": false,
+  "radio_table": [
+    {
+      "antenna_id": -1,
+      "antenna_gain": 4,
+      "name": "wifi0",
+      "ht": 40,
+      "channel": 11,
+      "tx_power_mode": "auto",
+      "vwire_enabled": true,
+      "min_rssi_enabled": false,
+      "assisted_roaming_enabled": false,
+      "radio": "ng"
+    },
+    {
+      "antenna_id": -1,
+      "antenna_gain": 6,
+      "name": "wifi1",
+      "ht": 80,
+      "channel": "auto",
+      "tx_power_mode": "auto",
+      "vwire_enabled": true,
+      "min_rssi_enabled": false,
+      "assisted_roaming_enabled": false,
+      "radio": "na"
+    },
+    {
+      "antenna_id": -1,
+      "antenna_gain": 6,
+      "name": "wifi2",
+      "ht": 320,
+      "channel": "auto",
+      "tx_power_mode": "high",
+      "vwire_enabled": true,
+      "min_rssi_enabled": false,
+      "assisted_roaming_enabled": false,
+      "radio": "6e"
+    }
+  ]
+}
