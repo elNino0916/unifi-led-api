@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniFi LED API - Control Your UniFi Device LEDs</title>
+    <style>
+        /* Reset and base styles */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { line-height: 1.5; -webkit-text-size-adjust: 100%; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+        body { min-height: 100vh; color: #ffffff; }
+        a { color: inherit; text-decoration: none; }
+        svg { display: block; }
+        
+        /* Utility classes */
+        .min-h-screen { min-height: 100vh; }
+        .w-full { width: 100%; }
+        .max-w-5xl { max-width: 64rem; }
+        .max-w-2xl { max-width: 42rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-16 { margin-bottom: 4rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .mr-3 { margin-right: 0.75rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .flex { display: flex; }
+        .inline-flex { display: inline-flex; }
+        .grid { display: grid; }
+        .flex-col { flex-direction: column; }
+        .flex-grow { flex-grow: 1; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-mono { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-full { border-radius: 9999px; }
+        .border { border-width: 1px; }
+        .border-t { border-top-width: 1px; }
+        .overflow-x-auto { overflow-x: auto; }
+        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .transition-colors { transition-property: color, background-color, border-color; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .duration-200 { transition-duration: 200ms; }
+        
+        /* Colors */
+        .text-white { color: #ffffff; }
+        .text-blue-400 { color: #60a5fa; }
+        .text-blue-300 { color: #93c5fd; }
+        .text-purple-400 { color: #c084fc; }
+        .text-green-400 { color: #4ade80; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-500 { color: #6b7280; }
+        
+        /* Custom styles */
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+        .glow-dot {
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            pointer-events: none;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.1) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+        }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.2);
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .icon-bg-blue { background-color: rgba(59, 130, 246, 0.2); }
+        .icon-bg-purple { background-color: rgba(147, 51, 234, 0.2); }
+        .icon-bg-green { background-color: rgba(34, 197, 94, 0.2); }
+        .bg-glass { background-color: rgba(255, 255, 255, 0.1); }
+        .bg-glass:hover { background-color: rgba(255, 255, 255, 0.2); }
+        .border-glass { border-color: rgba(255, 255, 255, 0.2); }
+        .border-footer { border-color: rgba(255, 255, 255, 0.1); }
+        .icon-box {
+            width: 3rem;
+            height: 3rem;
+        }
+        .hero-icon-box {
+            width: 5rem;
+            height: 5rem;
+            background: linear-gradient(to bottom right, #3b82f6, #9333ea);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+        .emoji-box {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(to bottom right, #3b82f6, #9333ea);
+        }
+        .btn-gradient {
+            background: linear-gradient(to bottom right, #3b82f6, #9333ea);
+        }
+        .btn-gradient:hover { opacity: 0.9; }
+        .gradient-text {
+            background: linear-gradient(to right, #ffffff, #dbeafe, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .group:hover .group-hover-translate { transform: translateX(-0.25rem); }
+        .hover-scale:hover { transform: scale(1.05); }
+        .opacity-0 { opacity: 0; }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .md-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md-text-5xl { font-size: 3rem; line-height: 1; }
+            .md-flex-row { flex-direction: row; }
+        }
+        @media (min-width: 1024px) {
+            .lg-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        
+        /* SVG sizing */
+        .w-5 { width: 1.25rem; }
+        .h-5 { height: 1.25rem; }
+        .w-6 { width: 1.5rem; }
+        .h-6 { height: 1.5rem; }
+        .w-10 { width: 2.5rem; }
+        .h-10 { height: 2.5rem; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Cursor reactive glow -->
+    <div id="glow" class="glow-dot opacity-0"></div>
+    
+    <div class="content-wrapper min-h-screen flex flex-col">
+        <!-- Top navigation -->
+        <nav class="w-full py-4 px-6">
+            <div class="max-w-5xl mx-auto">
+                <a href="https://elnino0916.de" class="group inline-flex items-center text-blue-400 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-2 group-hover-translate transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to elnino0916.de
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="flex-grow flex items-center justify-center px-6 py-12">
+            <div class="max-w-5xl mx-auto w-full">
+                <!-- Hero section -->
+                <div class="text-center mb-16">
+                    <div class="inline-flex items-center justify-center hero-icon-box rounded-2xl mb-6">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-4xl md-text-5xl font-bold mb-4 gradient-text">
+                        UniFi LED API
+                    </h1>
+                    <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                        An unofficial Python API to control LED status on UniFi devices via undocumented REST APIs.
+                    </p>
+                </div>
+
+                <!-- Features grid -->
+                <div class="grid md-grid-cols-2 lg-grid-cols-3 gap-6 mb-16">
+                    <div class="feature-card rounded-xl p-6">
+                        <div class="icon-box rounded-lg icon-bg-blue flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Programmatic Control</h3>
+                        <p class="text-gray-400 text-sm">Turn device LEDs on or off programmatically with simple commands.</p>
+                    </div>
+
+                    <div class="feature-card rounded-xl p-6">
+                        <div class="icon-box rounded-lg icon-bg-purple flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Universal Compatibility</h3>
+                        <p class="text-gray-400 text-sm">Works with UniFi OS and legacy controllers seamlessly.</p>
+                    </div>
+
+                    <div class="feature-card rounded-xl p-6">
+                        <div class="icon-box rounded-lg icon-bg-green flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Automation Ready</h3>
+                        <p class="text-gray-400 text-sm">Perfect for cron jobs and home automation systems.</p>
+                    </div>
+                </div>
+
+                <!-- Quick start section -->
+                <div class="feature-card rounded-2xl p-8 mb-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center">
+                        <span class="emoji-box rounded-lg flex items-center justify-center mr-3 text-sm">🚀</span>
+                        Quick Start
+                    </h2>
+                    <div>
+                        <div class="code-block rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                            <span class="text-gray-500"># Clone the repository</span><br>
+                            <span class="text-green-400">git clone</span> https://github.com/elNino0916/unifi-led-api.git<br><br>
+                            <span class="text-gray-500"># Install dependencies</span><br>
+                            <span class="text-green-400">pip3 install</span> requests<br><br>
+                            <span class="text-gray-500"># Turn LED on</span><br>
+                            <span class="text-green-400">python3</span> start.py led on
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="text-center flex flex-wrap justify-center gap-4">
+                    <a href="https://github.com/elNino0916/unifi-led-api" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-6 py-4 bg-glass border border-glass rounded-full transition-all duration-200 hover-scale">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+                        </svg>
+                        View on GitHub
+                    </a>
+                    <a href="https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-6 py-4 btn-gradient rounded-full transition-all duration-200 hover-scale">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        Setup Guide
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full py-8 px-6 border-t border-footer">
+            <div class="max-w-5xl mx-auto flex flex-col md-flex-row items-center justify-between gap-4">
+                <p class="text-gray-500 text-sm">©2025 elNino0916</p>
+                <div class="flex items-center gap-6">
+                    <a href="https://elnino0916.de/terms" class="text-gray-400 text-sm transition-colors duration-200">Terms</a>
+                    <a href="https://elnino0916.de/privacy" class="text-gray-400 text-sm transition-colors duration-200">Privacy</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Cursor reactive background script -->
+    <script>
+        const glow = document.getElementById('glow');
+        let mouseX = 0, mouseY = 0;
+        let glowX = 0, glowY = 0;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            glow.style.opacity = '1';
+        });
+
+        document.body.addEventListener('mouseleave', () => {
+            glow.style.opacity = '0';
+        });
+
+        // Smooth follow animation
+        function animate() {
+            glowX += (mouseX - glowX) * 0.1;
+            glowY += (mouseY - glowY) * 0.1;
+            glow.style.left = glowX + 'px';
+            glow.style.top = glowY + 'px';
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
