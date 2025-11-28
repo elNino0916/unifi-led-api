@@ -18,13 +18,11 @@ import os
 import sys
 from pathlib import Path
 
-import grab_token as token_mod  # careful with name clash if this file is named token.py
+import grab_token as token_mod 
 import led_logic
 
 # If your file is called token.py, the import above must be:
 #   import token as token_mod
-# which we already did. Just make sure the filename is exactly token.py
-# and it's in the same directory as start.py.
 
 def main():
     if len(sys.argv) != 3 or sys.argv[1] != "led" or sys.argv[2] not in ("on", "off"):
