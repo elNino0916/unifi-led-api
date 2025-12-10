@@ -1,5 +1,6 @@
 ![Python Version](https://img.shields.io/badge/python-3.6%2B-blue)
 ![UniFi OS](https://img.shields.io/badge/UniFi%20OS%20Version-Tested%20with%205.0.5%20(EA)-darkgreen)
+![UniFi Network](https://img.shields.io/badge/UniFi%20Network%20Version-Tested%20with%2010.0.162%20(EA)-darkblue)
 
 <img width="87" height="92" alt="image" src="https://github.com/user-attachments/assets/97ce17f4-45a0-42b2-a3b1-81616112edc1" />
 
