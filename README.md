@@ -2,9 +2,8 @@
 ![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.5-darkgreen?style=for-the-badge&logo=ubiquiti)
 ![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.0.162-darkblue?style=for-the-badge&logo=ubiquiti)
 
-<img width="87" height="92" alt="image" src="https://github.com/user-attachments/assets/97ce17f4-45a0-42b2-a3b1-81616112edc1" />
 
-# UniFi LED API
+<img width="983" height="219" alt="Screenshot 2025-12-16 193949" src="https://github.com/user-attachments/assets/5158fd9e-e956-43c1-8862-ac72b7328849" />
 
 UniFi has never implemented a proper night mode scheduler for Access Points — despite users requesting it for years.
 This project fills that gap with a lightweight, reliable Python-based API that sends PUT requests to the internal REST API of the AP.
