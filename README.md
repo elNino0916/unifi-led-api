@@ -33,7 +33,7 @@ and manual modification of LED-related settings or scripts.
 ⚠️ SSH-based approaches have been observed to cause firmware corruption and device instability,
 sometimes requiring recovery via TFTP.
 
-UniFi access points are not designed for persistent or repeated SSH access.
+**UniFi access points are not designed for persistent or repeated SSH access.**
 Running SSH-based automation can:
 
 - Increase CPU and memory usage on the AP
