@@ -21,9 +21,6 @@ from pathlib import Path
 import grab_token as token_mod 
 import led_logic
 
-# If your file is called token.py, the import above must be:
-#   import token as token_mod
-
 def main():
     if len(sys.argv) != 3 or sys.argv[1] != "led" or sys.argv[2] not in ("on", "off"):
         print(f"Usage: {sys.argv[0]} led on|off")
