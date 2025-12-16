@@ -116,8 +116,11 @@ You have not updated your json files after a config change / update. Please chec
 
 ## License
 
-This project is provided as-is for educational and personal use.
+This project is provided under the MIT License.
 
 ## Disclaimer
 
-This is an unofficial API tool. Use at your own risk. Not affiliated with or endorsed by Ubiquiti Inc.
+This project is an unofficial tool and is not affiliated with, endorsed by, or supported by Ubiquiti Inc. or any of its subsidiaries in any way.
+This software interacts with internal and undocumented UniFi controller and access point APIs, which are subject to change without notice. As a result, functionality may break at any time due to firmware updates, controller updates, configuration changes, or other modifications made by Ubiquiti.
+**Use this tool only if you understand what it does and have verified it in a safe or non-production environment first.**
+If you are unsure whether this tool is appropriate for your setup, do **not** use it.
