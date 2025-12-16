@@ -12,7 +12,7 @@ This project fills that gap with a lightweight, reliable Python-based API that s
 Tested on U7 Pro and U6+.
 > [!NOTE]  
 > This project might seem very hard to set up at first, but if set up correctly, it should not be that hard anymore to maintain.
-> Refer to the wiki for more information [here](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files). Consider opening a [issue](https://github.com/elNino0916/unifi-led-api/issues) if you need help.
+> Refer to the wiki for more information [here](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files). Consider opening an [issue](https://github.com/elNino0916/unifi-led-api/issues) if you need help.
 
 > [!NOTE] 
 > Modern UniFi APs (U6/U7 series) support LED override ON/OFF only.  
@@ -24,6 +24,27 @@ Tested on U7 Pro and U6+.
 - Simple command-line interface
 - Configurable via environment variables
 - Suitable for cron jobs and automation
+
+## Why this does NOT use SSH
+
+Many existing UniFi LED control solutions rely on SSH access to the access point
+and manual modification of LED-related settings or scripts.
+
+⚠️ SSH-based approaches have been observed to cause firmware corruption and device instability,
+sometimes requiring recovery via TFTP.
+
+UniFi access points are not designed for persistent or repeated SSH access.
+Running SSH-based automation can:
+
+- Increase CPU and memory usage on the AP
+- Interfere with UniFi’s internal configuration management
+- Cause device instability, reprovisioning loops, or unexpected reboots
+- Break silently after firmware updates
+
+This project avoids SSH entirely and instead uses the same internal REST API
+mechanism the UniFi controller itself uses to manage device configuration.
+As a result, it is significantly more stable, safer, and closer to how UniFi
+intended devices to be managed. This makes it suitable for long-term automation, cron jobs, and unattended operation.
 
 ## Requirements
 
