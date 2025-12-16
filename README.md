@@ -8,6 +8,10 @@
 UniFi has never implemented a proper night mode scheduler for Access Points — despite users requesting it for years.
 This project fills that gap with a lightweight, reliable Python-based API that sends PUT requests to the internal REST API of the AP.
 Tested on U7 Pro and U6+.
+> [!NOTE]  
+> This project might seem very hard to set up at first, but if set up correctly, it should not be that hard anymore to maintain.
+> Refer to the wiki for more information [here](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files). Consider opening a [issue](https://github.com/elNino0916/unifi-led-api/issues) if you need help.
+
 > [!NOTE] 
 > Modern UniFi APs (U6/U7 series) support LED override ON/OFF only.  
 > Color and brightness overrides are ignored by firmware.
@@ -104,7 +108,7 @@ If you're using a self-signed certificate, set `UNIFI_VERIFY_SSL=false`
 
 ### CSRF Token Errors
 
-The API automatically handles CSRF tokens. If you encounter issues, ensure your controller is running a compatible version.+
+The API automatically handles CSRF tokens. If you encounter issues, ensure your controller is running a compatible version.
 
 ### Other errors / config changes
 
