@@ -1,6 +1,6 @@
 ![Python Version](https://img.shields.io/badge/python-gray?style=for-the-badge&logo=python)
-![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.5-darkgreen?style=for-the-badge&logo=ubiquiti)
-![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.0.162-darkblue?style=for-the-badge&logo=ubiquiti)
+![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.9-darkgreen?style=for-the-badge&logo=ubiquiti)
+![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.1.67-darkblue?style=for-the-badge&logo=ubiquiti)
 
 
 <img width="983" height="219" alt="Screenshot 2025-12-16 193949" src="https://github.com/user-attachments/assets/5158fd9e-e956-43c1-8862-ac72b7328849" />
