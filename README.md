@@ -2,6 +2,10 @@
 ![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.12-darkgreen?style=for-the-badge&logo=ubiquiti)
 ![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.1.78-darkblue?style=for-the-badge&logo=ubiquiti)
 
+> [!NOTE]  
+> ## This project is no longer actively maintained. The same functionality can now be easily achieved using the official Home Assistant UniFi integration.
+
+
 
 <img width="1098" height="240" alt="image" src="https://github.com/user-attachments/assets/4092ad96-cd2e-487d-b0e2-1657f5e0462c" />
 
