@@ -1,9 +1,9 @@
 ![Python Version](https://img.shields.io/badge/python-gray?style=for-the-badge&logo=python)
 ![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.12-darkgreen?style=for-the-badge&logo=ubiquiti)
-![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.1.78-darkblue?style=for-the-badge&logo=ubiquiti)
+![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.1.85-darkblue?style=for-the-badge&logo=ubiquiti)
 
 > [!NOTE]  
-> ## This project is no longer actively maintained. The same functionality can now be easily achieved using the official Home Assistant UniFi integration.
+> ## This project is maintained again as the official Home Assistant UniFi integration is way too buggy to get a working day/night mode.
 
 
 
