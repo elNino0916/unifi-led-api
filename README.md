@@ -4,7 +4,8 @@
 ![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.2.84-darkblue?style=for-the-badge&logo=ubiquiti)
 
 
-<img width="1098" height="240" alt="image" src="https://github.com/user-attachments/assets/4092ad96-cd2e-487d-b0e2-1657f5e0462c" />
+<img width="1015" height="232" alt="image" src="https://github.com/user-attachments/assets/da1d5ef2-4d7e-4afe-a7b2-88aa57a46c01" />
+
 
 Control UniFi Access Point LEDs via internal API — perfect for night mode scheduling and automation.
 
