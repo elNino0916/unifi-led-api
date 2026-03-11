@@ -2,10 +2,6 @@
 ![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.12-darkgreen?style=for-the-badge&logo=ubiquiti)
 ![UniFi Network](https://img.shields.io/badge/Network%20Version-Tested%20with%2010.1.85-darkblue?style=for-the-badge&logo=ubiquiti)
 
-> [!NOTE]  
-> ## This project is maintained again as the official Home Assistant UniFi integration is way too buggy to get a working day/night mode.
-
-
 
 <img width="1098" height="240" alt="image" src="https://github.com/user-attachments/assets/4092ad96-cd2e-487d-b0e2-1657f5e0462c" />
 
