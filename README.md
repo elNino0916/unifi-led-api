@@ -14,20 +14,22 @@ Control UniFi Access Point LEDs via internal API — perfect for night mode sche
 UniFi has never implemented a proper night mode scheduler for Access Points — despite users requesting it for years.
 This project fills that gap with a lightweight, reliable Python-based API that sends PUT requests to the internal REST API of the AP.
 Tested on U7 Pro and U6+.
+
 > [!NOTE]  
 > Modern UniFi APs (U6/U7 series) support LED override ON/OFF only.  
 > Color and brightness overrides are ignored by firmware.
+
 ## Features
 
 - Turn device LEDs on or off programmatically
-- **Auto-generate config** — `fetch-config` pulls your device settings automatically
+- **Auto-config** — device config is fetched live on every run, so payloads are never stale
+- **Per-device payloads** — each AP gets its own config files (`led_on_{id}.json` / `led_off_{id}.json`)
 - **Multiple device support** — control several APs with one command
 - **Cross-platform config** — `.env` file works on Linux, macOS, and Windows
 - Works with UniFi OS and legacy controllers
 - Simple command-line interface with `--help` support
-- Configurable via environment variables or `.env` file
 - Suitable for cron jobs, automation, and Docker
-- Docker-ready for NAS and server deployments
+- Published Docker image on [GitHub Container Registry](https://ghcr.io)
 
 ## Why this does NOT use SSH
 
@@ -59,6 +61,8 @@ intended devices to be managed. This makes it suitable for long-term automation,
 
 ## Installation
 
+### With Python
+
 1. Clone this repository:
    ```bash
    git clone https://github.com/elNino0916/unifi-led-api.git
@@ -70,26 +74,38 @@ intended devices to be managed. This makes it suitable for long-term automation,
    pip3 install -r requirements.txt
    ```
 
-## Configuration
+### With Docker
 
-### Quick setup (recommended)
+```bash
+docker pull ghcr.io/elnino0916/unifi-led-api:main
+```
+
+Or build locally:
+
+```bash
+docker build -t unifi-led-api .
+```
+
+## Configuration
 
 1. Copy the example env file and fill in your values:
    ```bash
    cp .env.example .env
    ```
 2. Edit `.env` with your controller IP, credentials, and device ID(s).
-3. Auto-generate the LED payload files:
-   ```bash
-   python3 start.py fetch-config
-   ```
-   This connects to your controller, pulls your device's current config, and generates `led_on.json` and `led_off.json` automatically.
 
-That's it — you're ready to use the tool.
+That's it — you're ready to go. The tool fetches your device config automatically on every run.
 
-### Manual setup
+### Finding your device ID
 
-Detailed manual instructions can be found in the [wiki](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files).
+Your device ID is in the UniFi controller URL when viewing a device:
+
+```
+https://<controller-ip>/network/default/devices/properties/device/<DEVICE_ID>/general
+```
+
+> [!TIP]
+> If you enter a wrong device ID, the error message will list all available devices with their names and IDs.
 
 ### Environment variables
 
@@ -102,18 +118,15 @@ Detailed manual instructions can be found in the [wiki](https://github.com/elNin
 | `UNIFI_SITE` | No | `default` | UniFi site name |
 | `UNIFI_VERIFY_SSL` | No | `false` | Set to `true` for valid SSL certs |
 
-Variables can be set via:
-- A `.env` file in the project directory (recommended, cross-platform)
-- Inline environment variables
-
 ### Multiple devices
 
 Set `UNIFI_DEVICE_ID` to a comma-separated list:
+
 ```
 UNIFI_DEVICE_ID=device_id_1,device_id_2,device_id_3
 ```
 
-All devices will be updated in a single run.
+Each device gets its own per-device config files and all are updated in a single run.
 
 ## Usage
 
@@ -121,12 +134,6 @@ All devices will be updated in a single run.
 python3 start.py --help
 python3 start.py led --help
 python3 start.py fetch-config --help
-```
-
-### Auto-generate config files
-
-```bash
-python3 start.py fetch-config
 ```
 
 ### Turn LED On
@@ -140,6 +147,18 @@ python3 start.py led on
 ```bash
 python3 start.py led off
 ```
+
+> [!NOTE]
+> Every `led on/off` command automatically fetches the latest device config before pushing.
+> This means config files are always up-to-date — no manual regeneration needed after firmware updates or config changes.
+
+### Preview config without changing LEDs
+
+```bash
+python3 start.py fetch-config
+```
+
+This fetches the device config and generates the JSON payload files without making any changes. Useful for inspecting what will be sent.
 
 ### Cron Example
 
@@ -156,43 +175,40 @@ Turn on LEDs every morning at 7 AM:
 ```
 
 > [!TIP]
-> The `.env` file is loaded automatically — no need to `source set_env.sh` in your cron jobs.
+> The `.env` file is loaded automatically — no extra setup needed in cron.
 
 ### Docker
 
-Build and run:
-
 ```bash
-docker build -t unifi-led-api .
-
 # Turn LEDs off
-docker run --env-file .env unifi-led-api led off
+docker run --rm --env-file .env ghcr.io/elnino0916/unifi-led-api:main led off
 
 # Turn LEDs on
-docker run --env-file .env unifi-led-api led on
+docker run --rm --env-file .env ghcr.io/elnino0916/unifi-led-api:main led on
 
-# Auto-generate config (mount volume so JSON files persist)
-docker run --env-file .env -v $(pwd):/app unifi-led-api fetch-config
+# Preview config
+docker run --rm --env-file .env -v $(pwd):/app ghcr.io/elnino0916/unifi-led-api:main fetch-config
 ```
 
-For scheduled execution with Docker, use cron on the host:
+Docker cron example:
 
 ```bash
-0 22 * * * docker run --rm --env-file /path/to/.env -v /path/to/unifi-led-api:/app unifi-led-api led off
-0 7  * * * docker run --rm --env-file /path/to/.env -v /path/to/unifi-led-api:/app unifi-led-api led on
+0 22 * * * docker run --rm --env-file /path/to/.env ghcr.io/elnino0916/unifi-led-api:main led off
+0 7  * * * docker run --rm --env-file /path/to/.env ghcr.io/elnino0916/unifi-led-api:main led on
 ```
 
-## LED Payload Configuration
+## LED Payload Files
 
-The `led_on.json` and `led_off.json` files contain the device configuration payloads.
+Config files are generated per-device as `led_on_{device_id}.json` and `led_off_{device_id}.json`.
 
-**Recommended:** Run `python3 start.py fetch-config` to generate these automatically.
+These are **auto-generated on every run** from your live device config. You generally don't need to touch them, but they're written to disk so you can inspect exactly what gets sent.
 
 If customizing manually:
 
 - `led_override`: `"on"` or `"off"`
 - `led_override_color`: LED color in hex format (e.g., `"#0000ff"`) **(Only older APs)**
 - `led_override_color_brightness`: Brightness percentage (e.g., `"100"`) **(Only on some newer APs if it even works in the first place.)**
+
 > [!CAUTION]  
 > Do NOT modify anything in the JSON files except the LED fields.  
 > Changing other values can break your device configuration.
@@ -212,14 +228,6 @@ If you're using a self-signed certificate, set `UNIFI_VERIFY_SSL=false`
 ### CSRF Token Errors
 
 The API automatically handles CSRF tokens. If you encounter issues, ensure your controller is running a compatible version.
-
-### Missing JSON files
-
-Run `python3 start.py fetch-config` to auto-generate `led_on.json` and `led_off.json`.
-
-### Other errors / config changes
-
-You have not updated your json files after a config change / update. Run `python3 start.py fetch-config` to regenerate them, or check out [Step 1](https://github.com/elNino0916/unifi-led-api/wiki/%5BSTEP-1%5D-Gather-required-strings-&-create-json-files) to recreate the json files manually.
 
 ## License
 
