@@ -18,16 +18,14 @@ import sys
 import requests
 import urllib3
 
-# ---------- CONFIG FROM ENV ----------
-CONTROLLER = os.environ.get("UNIFI_CONTROLLER")
-if not CONTROLLER:
-    raise RuntimeError("UNIFI_CONTROLLER must be set in the environment")
-VERIFY_SSL = os.environ.get("UNIFI_VERIFY_SSL", "false").lower() in ("1", "true", "yes")
-# ------------------------------------
 
-
-if not VERIFY_SSL:
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+def _read_config():
+    """Read controller config from environment at call time (not import time)."""
+    controller = os.environ.get("UNIFI_CONTROLLER")
+    if not controller:
+        raise RuntimeError("UNIFI_CONTROLLER must be set in the environment")
+    verify_ssl = os.environ.get("UNIFI_VERIFY_SSL", "false").lower() in ("1", "true", "yes")
+    return controller, verify_ssl
 
 
 def _login(session: requests.Session, controller: str, username: str, password: str):
@@ -58,7 +56,6 @@ def _login(session: requests.Session, controller: str, username: str, password: 
             continue
 
         print(f"[*] Login response status: {resp.status_code}")
-        # Debug body only on non-2xx to avoid noise
         if not resp.ok:
             print(f"[DEBUG] Login response body from {url}: {resp.text}")
         else:
@@ -96,6 +93,11 @@ def get_session():
     Uses env vars:
       UNIFI_USER, UNIFI_PASS, UNIFI_CONTROLLER, UNIFI_VERIFY_SSL
     """
+    controller, verify_ssl = _read_config()
+
+    if not verify_ssl:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     username = os.environ.get("UNIFI_USER")
     password = os.environ.get("UNIFI_PASS")
 
@@ -103,23 +105,22 @@ def get_session():
         raise RuntimeError("UNIFI_USER and UNIFI_PASS must be set in the environment")
 
     print("=== UniFi grab_token.get_session ===")
-    print(f"[*] Controller    : {CONTROLLER}")
-    print(f"[*] VERIFY_SSL    : {VERIFY_SSL}")
+    print(f"[*] Controller    : {controller}")
+    print(f"[*] VERIFY_SSL    : {verify_ssl}")
     print(f"[*] Username      : {username}")
-    # Do NOT print password
 
     session = requests.Session()
-    session.verify = VERIFY_SSL
+    session.verify = verify_ssl
     session.headers.update({
         "Accept": "application/json, text/plain, */*",
         "Content-Type": "application/json",
     })
 
     try:
-        _login(session, CONTROLLER, username, password)
+        _login(session, controller, username, password)
     except RuntimeError as e:
         print("[DEBUG] Failed login details:")
-        print("  Controller:", CONTROLLER)
+        print("  Controller:", controller)
         print("  Username  :", username)
         raise
 
@@ -131,10 +132,9 @@ def get_session():
 
     print("[*] TOKEN cookie acquired.")
 
-    csrf = _get_csrf(session, CONTROLLER)
+    csrf = _get_csrf(session, controller)
     print("[*] CSRF token acquired.")
 
-    # Attach CSRF header for subsequent write operations
     session.headers["x-csrf-token"] = csrf
 
     return session, token, csrf
@@ -148,9 +148,10 @@ def main():
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
+    controller, verify_ssl = _read_config()
     print("\n=== UniFi Session Info ===")
-    print("Controller:", CONTROLLER)
-    print("VERIFY_SSL:", VERIFY_SSL)
+    print("Controller:", controller)
+    print("VERIFY_SSL:", verify_ssl)
     print("TOKEN:", token)
     print("CSRF :", csrf)
 

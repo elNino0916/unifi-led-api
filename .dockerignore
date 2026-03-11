@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+led_on.json
+led_off.json

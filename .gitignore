@@ -27,4 +27,8 @@ env/
 Thumbs.db
 
 # Local config files with real credentials
-my_env.sh
+.env
+
+# Generated LED payload files (contain device-specific config)
+led_on*.json
+led_off*.json
