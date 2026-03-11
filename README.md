@@ -25,7 +25,7 @@ Tested on U7 Pro and U6+.
 - Works with UniFi OS and legacy controllers
 - Simple command-line interface with `--help` support
 - Suitable for cron jobs, automation, and Docker
-- Published Docker image on [GitHub Container Registry](https://ghcr.io)
+- Published Docker image on [GitHub Container Registry](https://ghcr.io/elnino0916/unifi-led-api:latest)
 
 ## Why this does NOT use SSH
 
