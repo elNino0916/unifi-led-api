@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unifi-led-api"
+version = "0.1.0"
+description = "Control UniFi Access Point LEDs via the internal REST API."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "aiohttp>=3.9.0",
+    "python-dotenv>=0.19.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.23.0",
+    "aresponses>=3.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+unifi-led = "start:main"
+
+[tool.setuptools]
+py-modules = ["start", "led_logic", "grab_token"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle error
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warning
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+ignore = []
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "double"

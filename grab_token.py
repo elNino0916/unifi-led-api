@@ -1,160 +1,152 @@
 #!/usr/bin/env python3
 """
 grab_token.py
-Handles UniFi auth and CSRF retrieval.
-
-Environment variables:
-  UNIFI_USER        - UniFi username (local user, no 2FA)
-  UNIFI_PASS        - UniFi password
-  UNIFI_CONTROLLER  - Controller URL (e.g. https://192.168.178.1)
-  UNIFI_VERIFY_SSL  - "true"/"false" (default: false)
-
-Exposes:
-  get_session() -> (session, token, csrf)
+Handles UniFi auth and CSRF retrieval using aiohttp.
 """
 
-import os
 import sys
-import requests
-import urllib3
+import aiohttp
+import asyncio
+import logging
+from config import AppConfig
+
+logger = logging.getLogger(__name__)
 
 
-def _read_config():
-    """Read controller config from environment at call time (not import time)."""
-    controller = os.environ.get("UNIFI_CONTROLLER")
-    if not controller:
-        raise RuntimeError("UNIFI_CONTROLLER must be set in the environment")
-    verify_ssl = os.environ.get("UNIFI_VERIFY_SSL", "false").lower() in ("1", "true", "yes")
-    return controller, verify_ssl
-
-
-def _login(session: requests.Session, controller: str, username: str, password: str):
-    """
-    Try to log in using the new and old UniFi login endpoints.
-    Raise RuntimeError on failure with debug info included.
-    """
+async def _login(session: aiohttp.ClientSession, config: AppConfig):
+    """Try to log in using the new and old UniFi login endpoints."""
     login_urls = [
-        f"{controller}/api/auth/login",  # UniFi OS / newer
-        f"{controller}/api/login",       # legacy
+        f"{config.controller}/api/auth/login",  # UniFi OS / newer
+        f"{config.controller}/api/login",       # legacy
     ]
 
     payload = {
-        "username": username,
-        "password": password,
+        "username": config.user,
+        "password": config.password,
         "rememberMe": True,
     }
 
     last_error = None
 
     for url in login_urls:
-        print(f"[*] Trying login URL: {url}")
+        logger.debug("Trying login URL: %s", url)
         try:
-            resp = session.post(url, json=payload, timeout=10)
+            async with session.post(url, json=payload, timeout=10) as resp:
+                logger.debug("Login response status: %s", resp.status)
+                if not resp.ok:
+                    text = await resp.text()
+                    logger.debug("Login response body from %s: %s", url, text)
+                    last_error = text
+                    continue
+                else:
+                    logger.info("Login OK via %s", url)
+                    return resp
         except Exception as e:
-            print(f"[!] Exception during POST to {url}: {e}")
-            last_error = e
+            logger.debug("Exception during POST to %s: %s", url, e)
+            last_error = str(e)
             continue
-
-        print(f"[*] Login response status: {resp.status_code}")
-        if not resp.ok:
-            print(f"[DEBUG] Login response body from {url}: {resp.text}")
-        else:
-            print(f"[*] Login OK via {url}")
-            return resp
-
-        last_error = resp.text
 
     raise RuntimeError(f"Login failed: {last_error}")
 
 
-def _get_csrf(session: requests.Session, controller: str) -> str:
+async def _get_csrf(session: aiohttp.ClientSession, config: AppConfig) -> str:
+    """Fetch CSRF token via /proxy/network/api/self."""
+    url = f"{config.controller}/proxy/network/api/self"
+    logger.debug("Fetching CSRF from: %s", url)
+    async with session.get(url, timeout=10) as r:
+        logger.debug("CSRF fetch status: %s", r.status)
+
+        csrf = r.headers.get("x-csrf-token")
+        if not csrf:
+            logger.warning("No x-csrf-token header found in response headers:")
+            for k, v in r.headers.items():
+                logger.debug("  %s: %s", k, v)
+            raise RuntimeError("Could not obtain CSRF token from /proxy/network/api/self")
+
+        return csrf
+
+
+async def get_session(config: AppConfig) -> tuple[aiohttp.ClientSession, str]:
     """
-    Fetch CSRF token via /proxy/network/api/self.
+    Create an authenticated session and return (session, csrf).
     """
-    url = f"{controller}/proxy/network/api/self"
-    print(f"[*] Fetching CSRF from: {url}")
-    r = session.get(url, timeout=10)
-    print(f"[*] CSRF fetch status: {r.status_code}")
+    logger.debug("=== UniFi grab_token.get_session ===")
+    logger.debug("Controller    : %s", config.controller)
+    logger.debug("VERIFY_SSL    : %s", config.verify_ssl)
+    logger.debug("Username      : %s", config.user)
 
-    csrf = r.headers.get("x-csrf-token")
-    if not csrf:
-        print("[!] No x-csrf-token header found in response headers:")
-        for k, v in r.headers.items():
-            print(f"    {k}: {v}")
-        raise RuntimeError("Could not obtain CSRF token from /proxy/network/api/self")
-
-    return csrf
-
-
-def get_session():
-    """
-    Create an authenticated session and return (session, token, csrf).
-
-    Uses env vars:
-      UNIFI_USER, UNIFI_PASS, UNIFI_CONTROLLER, UNIFI_VERIFY_SSL
-    """
-    controller, verify_ssl = _read_config()
-
-    if not verify_ssl:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-    username = os.environ.get("UNIFI_USER")
-    password = os.environ.get("UNIFI_PASS")
-
-    if not username or not password:
-        raise RuntimeError("UNIFI_USER and UNIFI_PASS must be set in the environment")
-
-    print("=== UniFi grab_token.get_session ===")
-    print(f"[*] Controller    : {controller}")
-    print(f"[*] VERIFY_SSL    : {verify_ssl}")
-    print(f"[*] Username      : {username}")
-
-    session = requests.Session()
-    session.verify = verify_ssl
-    session.headers.update({
-        "Accept": "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-    })
+    connector = aiohttp.TCPConnector(ssl=config.verify_ssl)
+    
+    # UniFi controllers are often accessed via raw IP addresses.
+    # aiohttp's CookieJar ignores cookies from raw IP addresses by default.
+    # We must pass unsafe=True to allow these cookies.
+    cookie_jar = aiohttp.CookieJar(unsafe=True)
+    
+    session = aiohttp.ClientSession(
+        connector=connector,
+        cookie_jar=cookie_jar,
+        headers={
+            "Accept": "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+        }
+    )
 
     try:
-        _login(session, controller, username, password)
-    except RuntimeError as e:
-        print("[DEBUG] Failed login details:")
-        print("  Controller:", controller)
-        print("  Username  :", username)
+        # Simple retry loop for authentication
+        for attempt in range(3):
+            try:
+                await _login(session, config)
+                break
+            except Exception as e:
+                if attempt == 2:
+                    raise
+                logger.warning("Login try %d failed, retrying... (%s)", attempt + 1, e)
+                await asyncio.sleep(1)
+
+        # Check if the TOKEN cookie is natively in the jar
+        has_token = any(cookie.key == "TOKEN" for cookie in session.cookie_jar)
+        if not has_token:
+            logger.warning("No TOKEN cookie after login! Cookies: %s", list(session.cookie_jar))
+            raise RuntimeError("No TOKEN cookie received after login")
+            
+        logger.debug("TOKEN cookie acquired.")
+
+        csrf = await _get_csrf(session, config)
+        logger.debug("CSRF token acquired.")
+
+        session.headers.update({"x-csrf-token": csrf})
+
+        return session, csrf
+
+    except Exception:
+        logger.error("Failed session initialization details:")
+        logger.error("  Controller: %s", config.controller)
+        logger.error("  Username  : %s", config.user)
+        await session.close()
         raise
 
-    token = session.cookies.get("TOKEN")
-    if not token:
-        print("[!] No TOKEN cookie after login. Cookies we got:")
-        print("    ", session.cookies.get_dict())
-        raise RuntimeError("No TOKEN cookie received after login")
+    csrf = await _get_csrf(session, config)
+    logger.debug("CSRF token acquired.")
 
-    print("[*] TOKEN cookie acquired.")
+    session.headers.update({"x-csrf-token": csrf})
 
-    csrf = _get_csrf(session, controller)
-    print("[*] CSRF token acquired.")
-
-    session.headers["x-csrf-token"] = csrf
-
-    return session, token, csrf
+    return session, csrf
 
 
-def main():
-    """CLI usage: just print TOKEN + CSRF for debugging."""
+async def async_main():
+    """CLI usage: just print Session + CSRF for debugging."""
+    config = AppConfig.load()
     try:
-        session, token, csrf = get_session()
+        session, csrf = await get_session(config)
+        await session.close()
     except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(f"ERROR: {e}")
 
-    controller, verify_ssl = _read_config()
     print("\n=== UniFi Session Info ===")
-    print("Controller:", controller)
-    print("VERIFY_SSL:", verify_ssl)
-    print("TOKEN:", token)
-    print("CSRF :", csrf)
+    print(f"Controller: {config.controller}")
+    print(f"VERIFY_SSL: {config.verify_ssl}")
+    print(f"CSRF : {csrf}")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(async_main())
