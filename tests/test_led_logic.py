@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from led_logic import generate_led_payloads
 
 @pytest.fixture
