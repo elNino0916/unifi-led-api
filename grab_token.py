@@ -4,10 +4,12 @@ grab_token.py
 Handles UniFi auth and CSRF retrieval using aiohttp.
 """
 
-import sys
-import aiohttp
 import asyncio
 import logging
+import sys
+
+import aiohttp
+
 from config import AppConfig
 
 logger = logging.getLogger(__name__)
@@ -76,12 +78,12 @@ async def get_session(config: AppConfig) -> tuple[aiohttp.ClientSession, str]:
     logger.debug("Username      : %s", config.user)
 
     connector = aiohttp.TCPConnector(ssl=config.verify_ssl)
-    
+
     # UniFi controllers are often accessed via raw IP addresses.
     # aiohttp's CookieJar ignores cookies from raw IP addresses by default.
     # We must pass unsafe=True to allow these cookies.
     cookie_jar = aiohttp.CookieJar(unsafe=True)
-    
+
     session = aiohttp.ClientSession(
         connector=connector,
         cookie_jar=cookie_jar,
@@ -108,7 +110,7 @@ async def get_session(config: AppConfig) -> tuple[aiohttp.ClientSession, str]:
         if not has_token:
             logger.warning("No TOKEN cookie after login! Cookies: %s", list(session.cookie_jar))
             raise RuntimeError("No TOKEN cookie received after login")
-            
+
         logger.debug("TOKEN cookie acquired.")
 
         csrf = await _get_csrf(session, config)

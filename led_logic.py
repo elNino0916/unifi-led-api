@@ -4,12 +4,13 @@ led_logic.py
 LED-related operations for UniFi devices via aiohttp.
 """
 
-from pathlib import Path
-import json
-import copy
-import aiohttp
 import asyncio
+import copy
+import json
 import logging
+from pathlib import Path
+
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,9 @@ async def fetch_device_config(
     )
 
 
-def generate_led_payloads(config: dict, base_dir: Path, device_id: str, write_files: bool = True) -> tuple[dict, dict]:
+def generate_led_payloads(
+    config: dict, base_dir: Path, device_id: str, write_files: bool = True
+) -> tuple[dict, dict]:
     """
     Generate per-device led_on and led_off dict payloads from a device config.
     If write_files is True, also saves them to led_on_{device_id}.json and led_off_{device_id}.json.

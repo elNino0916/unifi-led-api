@@ -33,17 +33,27 @@ async def process_device(session, config, base_dir, device_id, command, target_s
     """Handle processing a single device concurrently."""
     if command == "led":
         logging.info("Device: %s → LED %s", device_id, target_state)
-        dev_cfg = await led_logic.fetch_device_config(session, config.controller, config.site, device_id)
-        
-        on_payload, off_payload = led_logic.generate_led_payloads(dev_cfg, base_dir, device_id, write_files=True)
+        dev_cfg = await led_logic.fetch_device_config(
+            session, config.controller, config.site, device_id
+        )
+
+        on_payload, off_payload = led_logic.generate_led_payloads(
+            dev_cfg, base_dir, device_id, write_files=True
+        )
         body = on_payload if target_state == "on" else off_payload
-        
-        await led_logic.push_led_payload(session, config.controller, config.site, device_id, body)
-        
+
+        await led_logic.push_led_payload(
+            session, config.controller, config.site, device_id, body
+        )
+
     elif command == "fetch-config":
         logging.info("Fetching config for device: %s", device_id)
-        dev_cfg = await led_logic.fetch_device_config(session, config.controller, config.site, device_id)
-        led_logic.generate_led_payloads(dev_cfg, base_dir, device_id, write_files=True)
+        dev_cfg = await led_logic.fetch_device_config(
+            session, config.controller, config.site, device_id
+        )
+        led_logic.generate_led_payloads(
+            dev_cfg, base_dir, device_id, write_files=True
+        )
 
 
 async def async_main(args):
@@ -65,7 +75,7 @@ async def async_main(args):
         await asyncio.gather(*tasks)
     finally:
         await session.close()
-        
+
     if args.command == "led":
         logging.info("Done. Set LED %s on %d device(s).", args.state, len(config.device_ids))
     elif args.command == "fetch-config":
