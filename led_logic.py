@@ -80,19 +80,50 @@ async def fetch_device_config(
     raise RuntimeError(f"No device found with ID '{device_id}'.\nAvailable devices: {available}")
 
 
+async def discover_devices(
+    session: aiohttp.ClientSession,
+    controller: str,
+    site: str,
+    *,
+    timeout: int = 10,
+) -> list[dict]:
+    """Fetch all devices from the UniFi controller for auto-discovery."""
+    url = f"{controller}/proxy/network/api/s/{site}/stat/device"
+
+    async def _get():
+        logger.debug("Fetching device list from: %s", url)
+        async with session.get(url, timeout=timeout) as r:
+            logger.debug("Fetch status: %s", r.status)
+            r.raise_for_status()
+            return await r.json()
+
+    data = await async_retry(_get, retries=3, delay=1.0, description="GET device list")
+    return data.get("data", [])
+
+
 def get_led_status(config: dict) -> str:
     """Return the current led_override value from a device config dict."""
     return config.get("led_override", "unknown")
 
 
 def generate_led_payloads(
-    config: dict, base_dir: Path, device_id: str, write_files: bool = True
+    config: dict, base_dir: Path, device_id: str, write_files: bool = True,
+    color: str | None = None, brightness: int | None = None
 ) -> tuple[dict, dict]:
     """
     Generate per-device led_on and led_off dict payloads from a device config.
     If write_files is True, also saves them to led_on_{device_id}.json and led_off_{device_id}.json.
     Returns (on_payload, off_payload).
     """
+
+    # CRITICAL FALLBACK: Do not let users push gutted payloads to their Gateways (UDM) or Switches
+    if "led_override" not in config:
+        raise ValueError(
+            f"FATAL: Device '{config.get('name', device_id)}' does not natively support LED toggling "
+            "because the 'led_override' key is missing from its firmware config. "
+            "Pushing this payload would wipe out critical Gateway/Switch configuration data and "
+            "cause the UniFi OS watchdog to crash and reboot your router. Operation aborted."
+        )
     # Fields safe to include in the PUT payload
     KEEP_FIELDS = [
         "name",
@@ -117,9 +148,17 @@ def generate_led_payloads(
 
     on_payload = copy.deepcopy(payload)
     on_payload["led_override"] = "on"
+    if color is not None:
+        on_payload["led_override_color"] = color
+    if brightness is not None:
+        on_payload["led_override_color_brightness"] = brightness
 
     off_payload = copy.deepcopy(payload)
     off_payload["led_override"] = "off"
+    if color is not None:
+        off_payload["led_override_color"] = color
+    if brightness is not None:
+        off_payload["led_override_color_brightness"] = brightness
 
     on_path = base_dir / f"led_on_{device_id}.json"
     off_path = base_dir / f"led_off_{device_id}.json"

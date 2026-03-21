@@ -1,49 +1,42 @@
-import os
 import sys
-from dataclasses import dataclass
+from pydantic import Field, ValidationError, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclass
-class AppConfig:
-    controller: str
-    user: str
-    password: str
-    device_ids: list[str]
-    site: str
-    verify_ssl: bool
-    timeout: int
+from typing import Any
+
+class AppConfig(BaseSettings):
+    controller: str = Field(..., alias="UNIFI_CONTROLLER")
+    user: str = Field(..., alias="UNIFI_USER")
+    password: str = Field(..., alias="UNIFI_PASS")
+    device_ids: Any = Field(default=[], alias="UNIFI_DEVICE_ID")
+    site: str = Field("default", alias="UNIFI_SITE")
+    verify_ssl: bool = Field(False, alias="UNIFI_VERIFY_SSL")
+    timeout: int = Field(10, alias="UNIFI_TIMEOUT")
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @field_validator("device_ids", mode="before")
+    @classmethod
+    def parse_device_ids(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            return [d.strip() for d in v.split(",") if d.strip()]
+        return v
+
+    @field_validator("controller", mode="after")
+    @classmethod
+    def strip_controller_slash(cls, v: str) -> str:
+        return v.strip().rstrip("/")
+        
+    @field_validator("user", "password", mode="after")
+    @classmethod
+    def strip_whitespace(cls, v: str) -> str:
+        return v.strip()
 
     @classmethod
-    def load(cls) -> "AppConfig":
+    def load(cls, **kwargs) -> "AppConfig":
         """Load and validate all necessary environment variables."""
-        controller = os.environ.get("UNIFI_CONTROLLER")
-        if not controller:
-            sys.exit("ERROR: UNIFI_CONTROLLER must be set in the environment")
-
-        user = os.environ.get("UNIFI_USER")
-        password = os.environ.get("UNIFI_PASS")
-        if not user or not password:
-            sys.exit("ERROR: UNIFI_USER and UNIFI_PASS must be set in the environment")
-
-        raw_ids = os.environ.get("UNIFI_DEVICE_ID", "")
-        device_ids = [d.strip() for d in raw_ids.split(",") if d.strip()]
-        if not device_ids:
-            sys.exit("ERROR: UNIFI_DEVICE_ID must be set in the environment")
-
-        site = os.environ.get("UNIFI_SITE", "default")
-        verify_ssl = os.environ.get("UNIFI_VERIFY_SSL", "false").lower() in ("1", "true", "yes")
-
         try:
-            timeout = int(os.environ.get("UNIFI_TIMEOUT", "10"))
-        except ValueError:
-            timeout = 10
-
-        return cls(
-            controller=controller.rstrip("/"),
-            user=user,
-            password=password,
-            device_ids=device_ids,
-            site=site,
-            verify_ssl=verify_ssl,
-            timeout=timeout,
-        )
+            return cls(**kwargs)
+        except ValidationError as e:
+            sys.exit(f"ERROR: Configuration validation failed:\n{e}")

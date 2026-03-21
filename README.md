@@ -20,9 +20,13 @@ Tested on U7 Pro and U6+.
 ## Features
 
 - Turn device LEDs on or off programmatically
+- **Auto-Discovery** — finds all UniFi APs and checks LED toggle compatibility easily
+- **Webhook API Server** — built-in HTTP server explicitly designed to integrate with Node-RED, Home Assistant, etc.
+- **Device Groups** — create custom zones like `upstairs` or `downstairs` using `groups.json`
+- **CLI Color & Brightness** — supported on older models via `--color` and `--brightness`
 - **Auto-config** — device config is fetched live on every run, so payloads are never stale
 - **Per-device payloads** — each AP gets its own config files (`led_on_{id}.json` / `led_off_{id}.json`)
-- **Multiple device support** — control several APs with one command
+- **Multiple device support** — control several APs with one command or webhook
 - **LED status** — check the current LED state without making changes
 - **Dry-run mode** — preview payloads before sending
 - **Cross-platform config** — `.env` file works on Linux, macOS, and Windows
@@ -124,22 +128,54 @@ https://<controller-ip>/network/default/devices/properties/device/<DEVICE_ID>/ge
 | `UNIFI_VERIFY_SSL` | No | `false` | Set to `true` for valid SSL certs |
 | `UNIFI_TIMEOUT` | No | `10` | HTTP request timeout in seconds |
 
-### Multiple devices
+### Targeting Devices and Groups
 
-Set `UNIFI_DEVICE_ID` to a comma-separated list:
+You can define devices in the `.env` file via a comma-separated list:
 
-```
+```env
 UNIFI_DEVICE_ID=device_id_1,device_id_2,device_id_3
 ```
 
 Each device gets its own per-device config files and all are updated in a single run.
 
+**Using Device Groups:**
+Create a `groups.json` file in the root directory (see `groups.json.example`) to group IDs by name:
+```json
+{
+  "upstairs": ["device_id_1", "device_id_2"],
+  "downstairs": ["device_id_3"]
+}
+```
+You can then run commands targeting only that group by placing the global `--group` argument **before** the sub-command:
+```bash
+python3 start.py --group upstairs led on
+```
+
+**Specific Device Overrides:**
+Similarly, you can override the target device list entirely by passing the global `--device` argument **before** the sub-command:
+```bash
+python3 start.py --device device_id_3 led off
+```
+
 ## Usage
 
+### Interactive Setup
+The easiest way to configure the project is with the built-in interactive wizard. It will prompt for your credentials, discover all connected devices, and let you select which ones to control.
+```bash
+python3 start.py setup
 ```
+
+Once completed, a `.env` file will be generated automatically.
+
+### Commands Overview
+
+```bash
 python3 start.py --help
 python3 start.py led --help
 python3 start.py status --help
+python3 start.py discover --help
+python3 start.py serve --help
+python3 start.py setup --help
 python3 start.py fetch-config --help
 ```
 
@@ -147,6 +183,11 @@ python3 start.py fetch-config --help
 
 ```bash
 python3 start.py led on
+```
+
+For older supported access points, you can also pass a hex color and brightness percentage:
+```bash
+python3 start.py led on --color "#0000ff" --brightness 50
 ```
 
 ### Turn LED Off
@@ -167,13 +208,34 @@ python3 start.py led on --dry-run
 
 Shows the JSON payload that would be sent, without actually making any changes. Useful for debugging and first-time verification.
 
+### Auto-Discovery
+
+```bash
+python3 start.py discover
+```
+
+Finds all devices connected to the UniFi controller and lists their names, MAC addresses, models, and **device IDs**. It also includes a compatibility check table to show you if your firmware natively supports LED toggling.
+
 ### Check LED status
 
 ```bash
 python3 start.py status
 ```
 
-Displays the current `led_override` state for each configured device. No changes are made.
+Displays the current `led_override` state for each targeted device. No changes are made.
+
+### Webhook API Server
+
+Start a lightweight HTTP server to listen for webhooks. This is perfect for integrating UniFi LEDs with Node-RED, Home Assistant, or other platforms without invoking the CLI every time.
+
+```bash
+python3 start.py serve --port 8080
+```
+
+You can then control devices with HTTP `GET` or `POST` requests:
+- Turns on LEDs for `.env` configured devices: `http://localhost:8080/led/on`
+- Using query parameters for groups and overrides: `http://localhost:8080/led/off?group=upstairs` or `http://localhost:8080/led/on?device=id1,id2`
+- Using color and brightness: `http://localhost:8080/led/on?color=%23ff0000&brightness=100`
 
 ### Preview config without changing LEDs
 

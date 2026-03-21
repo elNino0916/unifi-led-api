@@ -6,14 +6,15 @@ from app_config import AppConfig
 
 
 @pytest.fixture(autouse=True)
-def _clean_env(monkeypatch):
-    """Remove all UNIFI_ env vars before each test to avoid leaking."""
+def clean_env(monkeypatch):
+    """Remove all UNIFI_ env vars before each test to avoid leaking, and ignore .env."""
     for key in list(os.environ):
         if key.startswith("UNIFI_"):
             monkeypatch.delenv(key, raising=False)
+    monkeypatch.setitem(AppConfig.model_config, "env_file", None)
 
 
-def _set_required(monkeypatch):
+def set_required(monkeypatch):
     """Set the minimum required env vars."""
     monkeypatch.setenv("UNIFI_CONTROLLER", "https://192.168.1.1")
     monkeypatch.setenv("UNIFI_USER", "admin")
@@ -23,8 +24,8 @@ def _set_required(monkeypatch):
 
 class TestAppConfigLoad:
     def test_loads_all_required(self, monkeypatch):
-        _set_required(monkeypatch)
-        cfg = AppConfig.load()
+        set_required(monkeypatch)
+        cfg = AppConfig.load(_env_file=None)
 
         assert cfg.controller == "https://192.168.1.1"
         assert cfg.user == "admin"
@@ -32,42 +33,42 @@ class TestAppConfigLoad:
         assert cfg.device_ids == ["abc123"]
 
     def test_strips_trailing_slash(self, monkeypatch):
-        _set_required(monkeypatch)
+        set_required(monkeypatch)
         monkeypatch.setenv("UNIFI_CONTROLLER", "https://192.168.1.1/")
-        cfg = AppConfig.load()
+        cfg = AppConfig.load(_env_file=None)
         assert cfg.controller == "https://192.168.1.1"
 
     def test_defaults(self, monkeypatch):
-        _set_required(monkeypatch)
-        cfg = AppConfig.load()
+        set_required(monkeypatch)
+        cfg = AppConfig.load(_env_file=None)
         assert cfg.site == "default"
         assert cfg.verify_ssl is False
         assert cfg.timeout == 10
 
     def test_custom_site_and_ssl(self, monkeypatch):
-        _set_required(monkeypatch)
+        set_required(monkeypatch)
         monkeypatch.setenv("UNIFI_SITE", "mysite")
         monkeypatch.setenv("UNIFI_VERIFY_SSL", "true")
-        cfg = AppConfig.load()
+        cfg = AppConfig.load(_env_file=None)
         assert cfg.site == "mysite"
         assert cfg.verify_ssl is True
 
     def test_custom_timeout(self, monkeypatch):
-        _set_required(monkeypatch)
+        set_required(monkeypatch)
         monkeypatch.setenv("UNIFI_TIMEOUT", "30")
-        cfg = AppConfig.load()
+        cfg = AppConfig.load(_env_file=None)
         assert cfg.timeout == 30
 
-    def test_invalid_timeout_uses_default(self, monkeypatch):
-        _set_required(monkeypatch)
+    def test_invalid_timeout_exits(self, monkeypatch):
+        set_required(monkeypatch)
         monkeypatch.setenv("UNIFI_TIMEOUT", "notanumber")
-        cfg = AppConfig.load()
-        assert cfg.timeout == 10
+        with pytest.raises(SystemExit):
+            AppConfig.load(_env_file=None)
 
     def test_multiple_device_ids(self, monkeypatch):
-        _set_required(monkeypatch)
+        set_required(monkeypatch)
         monkeypatch.setenv("UNIFI_DEVICE_ID", "id1, id2, id3")
-        cfg = AppConfig.load()
+        cfg = AppConfig.load(_env_file=None)
         assert cfg.device_ids == ["id1", "id2", "id3"]
 
     def test_missing_controller_exits(self, monkeypatch):
@@ -75,17 +76,10 @@ class TestAppConfigLoad:
         monkeypatch.setenv("UNIFI_PASS", "secret")
         monkeypatch.setenv("UNIFI_DEVICE_ID", "abc")
         with pytest.raises(SystemExit):
-            AppConfig.load()
+            AppConfig.load(_env_file=None)
 
     def test_missing_user_exits(self, monkeypatch):
         monkeypatch.setenv("UNIFI_CONTROLLER", "https://1.2.3.4")
         monkeypatch.setenv("UNIFI_DEVICE_ID", "abc")
         with pytest.raises(SystemExit):
-            AppConfig.load()
-
-    def test_missing_device_id_exits(self, monkeypatch):
-        monkeypatch.setenv("UNIFI_CONTROLLER", "https://1.2.3.4")
-        monkeypatch.setenv("UNIFI_USER", "admin")
-        monkeypatch.setenv("UNIFI_PASS", "secret")
-        with pytest.raises(SystemExit):
-            AppConfig.load()
+            AppConfig.load(_env_file=None)
