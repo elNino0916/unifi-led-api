@@ -1,6 +1,6 @@
 import pytest
 
-from retry import async_retry
+from unifi_led_api.retry import async_retry
 
 
 class TestAsyncRetry:
