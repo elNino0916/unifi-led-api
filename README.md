@@ -1,3 +1,4 @@
+[![Socket](https://badge.socket.dev/pypi/package/unifi-led-api/0.2.1?artifact_id=tar-gz)](https://badge.socket.dev/pypi/package/unifi-led-api/0.2.1?artifact_id=tar-gz&)
 ![Python](https://img.shields.io/badge/python-gray?style=for-the-badge&logo=python)
 ![Docker](https://img.shields.io/badge/docker-gray?style=for-the-badge&logo=docker)
 ![UniFi OS](https://img.shields.io/badge/OS%20Version-Tested%20with%205.0.16-darkgreen?style=for-the-badge&logo=ubiquiti)
