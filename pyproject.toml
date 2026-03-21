@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unifi-led-api"
-version = "0.2.1"
+version = "0.2.2"
 description = "Control UniFi Access Point LEDs via the internal REST API."
 readme = "README.md"
 requires-python = ">=3.9"
