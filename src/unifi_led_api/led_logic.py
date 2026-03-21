@@ -11,7 +11,7 @@ from pathlib import Path
 
 import aiohttp
 
-from retry import async_retry
+from unifi_led_api.retry import async_retry
 
 logger = logging.getLogger(__name__)
 

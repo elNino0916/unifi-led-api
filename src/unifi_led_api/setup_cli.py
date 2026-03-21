@@ -2,9 +2,9 @@ import asyncio
 import sys
 from pathlib import Path
 
-import grab_token as token_mod
-import led_logic
-from app_config import AppConfig
+from unifi_led_api import grab_token as token_mod
+from unifi_led_api import led_logic
+from unifi_led_api.app_config import AppConfig
 
 
 async def run_setup(base_dir: Path):

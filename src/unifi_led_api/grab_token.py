@@ -10,8 +10,8 @@ import sys
 
 import aiohttp
 
-from app_config import AppConfig
-from retry import async_retry
+from unifi_led_api.app_config import AppConfig
+from unifi_led_api.retry import async_retry
 
 logger = logging.getLogger(__name__)
 

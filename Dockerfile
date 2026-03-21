@@ -5,9 +5,9 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 WORKDIR /app
 
-# Copy project metadata first for better layer caching
+# Copy project metadata and source code
 COPY pyproject.toml README.md ./
-COPY *.py ./
+COPY src/ src/
 
 RUN pip install --no-cache-dir .
 
@@ -16,11 +16,5 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
-# Default: show help. Override CMD to run led on/off or fetch-config.
-# Examples:
-#   docker run --env-file .env unifi-led-api led on
-#   docker run --env-file .env unifi-led-api led off
-#   docker run --env-file .env unifi-led-api status
-#   docker run --env-file .env unifi-led-api fetch-config
-ENTRYPOINT ["python", "start.py"]
+ENTRYPOINT ["unifi-led"]
 CMD ["--help"]

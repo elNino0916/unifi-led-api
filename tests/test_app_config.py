@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from app_config import AppConfig
+from unifi_led_api.app_config import AppConfig
 
 
 @pytest.fixture(autouse=True)

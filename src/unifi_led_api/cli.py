@@ -25,15 +25,15 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 
-    load_dotenv(Path(__file__).resolve().parent / ".env")
+    load_dotenv(Path.cwd() / ".env")
 except ImportError:
     pass
 
 from aiohttp import web
 
-import grab_token as token_mod
-import led_logic
-from app_config import AppConfig
+from unifi_led_api import grab_token as token_mod
+from unifi_led_api import led_logic
+from unifi_led_api.app_config import AppConfig
 
 
 def resolve_device_ids(base_dir: Path, config: AppConfig, group: str | None = None) -> list[str]:
@@ -183,10 +183,10 @@ async def run_server(config, session, base_dir, port=8080):
 
 async def async_main(args):
     """Main async entrypoint taking CLI args."""
-    base_dir = Path(__file__).resolve().parent
+    base_dir = Path.cwd()
 
     if args.command == "setup":
-        import setup_cli
+        from unifi_led_api import setup_cli
         await setup_cli.run_setup(base_dir)
         return
 

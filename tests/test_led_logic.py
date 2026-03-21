@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from led_logic import (
+from unifi_led_api.led_logic import (
     fetch_device_config,
     generate_led_payloads,
     get_led_status,

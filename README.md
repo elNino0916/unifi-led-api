@@ -65,7 +65,14 @@ intended devices to be managed. This makes it suitable for long-term automation,
 
 ## Installation
 
-### With Python
+### With PyPI (Recommended)
+
+```bash
+pip install unifi-led-api
+```
+This gives you access to the global `unifi-led` command.
+
+### From Source / Development
 
 1. Clone this repository:
    ```bash
@@ -74,11 +81,6 @@ intended devices to be managed. This makes it suitable for long-term automation,
    ```
 
 2. Install dependencies:
-   ```bash
-   pip install .
-   ```
-
-   Or for development (includes linting and test tools):
    ```bash
    pip install -e ".[dev]"
    ```
@@ -148,13 +150,13 @@ Create a `groups.json` file in the root directory (see `groups.json.example`) to
 ```
 You can then run commands targeting only that group by placing the global `--group` argument **before** the sub-command:
 ```bash
-python3 start.py --group upstairs led on
+unifi-led --group upstairs led on
 ```
 
 **Specific Device Overrides:**
 Similarly, you can override the target device list entirely by passing the global `--device` argument **before** the sub-command:
 ```bash
-python3 start.py --device device_id_3 led off
+unifi-led --device device_id_3 led off
 ```
 
 ## Usage
@@ -162,38 +164,38 @@ python3 start.py --device device_id_3 led off
 ### Interactive Setup
 The easiest way to configure the project is with the built-in interactive wizard. It will prompt for your credentials, discover all connected devices, and let you select which ones to control.
 ```bash
-python3 start.py setup
+unifi-led setup
 ```
 
-Once completed, a `.env` file will be generated automatically.
+Once completed, a `.env` file will be generated automatically in your current directory.
 
 ### Commands Overview
 
 ```bash
-python3 start.py --help
-python3 start.py led --help
-python3 start.py status --help
-python3 start.py discover --help
-python3 start.py serve --help
-python3 start.py setup --help
-python3 start.py fetch-config --help
+unifi-led --help
+unifi-led led --help
+unifi-led status --help
+unifi-led discover --help
+unifi-led serve --help
+unifi-led setup --help
+unifi-led fetch-config --help
 ```
 
 ### Turn LED On
 
 ```bash
-python3 start.py led on
+unifi-led led on
 ```
 
 For older supported access points, you can also pass a hex color and brightness percentage:
 ```bash
-python3 start.py led on --color "#0000ff" --brightness 50
+unifi-led led on --color "#0000ff" --brightness 50
 ```
 
 ### Turn LED Off
 
 ```bash
-python3 start.py led off
+unifi-led led off
 ```
 
 > [!NOTE]
@@ -203,7 +205,7 @@ python3 start.py led off
 ### Preview payload (dry-run)
 
 ```bash
-python3 start.py led on --dry-run
+unifi-led led on --dry-run
 ```
 
 Shows the JSON payload that would be sent, without actually making any changes. Useful for debugging and first-time verification.
@@ -211,7 +213,7 @@ Shows the JSON payload that would be sent, without actually making any changes. 
 ### Auto-Discovery
 
 ```bash
-python3 start.py discover
+unifi-led discover
 ```
 
 Finds all devices connected to the UniFi controller and lists their names, MAC addresses, models, and **device IDs**. It also includes a compatibility check table to show you if your firmware natively supports LED toggling.
@@ -219,7 +221,7 @@ Finds all devices connected to the UniFi controller and lists their names, MAC a
 ### Check LED status
 
 ```bash
-python3 start.py status
+unifi-led status
 ```
 
 Displays the current `led_override` state for each targeted device. No changes are made.
@@ -229,7 +231,7 @@ Displays the current `led_override` state for each targeted device. No changes a
 Start a lightweight HTTP server to listen for webhooks. This is perfect for integrating UniFi LEDs with Node-RED, Home Assistant, or other platforms without invoking the CLI every time.
 
 ```bash
-python3 start.py serve --port 8080
+unifi-led serve --port 8080
 ```
 
 You can then control devices with HTTP `GET` or `POST` requests:
@@ -240,7 +242,7 @@ You can then control devices with HTTP `GET` or `POST` requests:
 ### Preview config without changing LEDs
 
 ```bash
-python3 start.py fetch-config
+unifi-led fetch-config
 ```
 
 This fetches the device config and generates the JSON payload files without making any changes. Useful for inspecting what will be sent.
@@ -250,13 +252,13 @@ This fetches the device config and generates the JSON payload files without maki
 Turn off LEDs every night at 10 PM:
 
 ```bash
-0 22 * * * cd /path/to/unifi-led-api && /usr/bin/python3 start.py led off
+0 22 * * * cd /path/to/my/env_folder && unifi-led led off
 ```
 
 Turn on LEDs every morning at 7 AM:
 
 ```bash
-0 7 * * * cd /path/to/unifi-led-api && /usr/bin/python3 start.py led on
+0 7 * * * cd /path/to/my/env_folder && unifi-led led on
 ```
 
 > [!TIP]

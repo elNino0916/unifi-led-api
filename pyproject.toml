@@ -24,10 +24,10 @@ dev = [
 ]
 
 [project.scripts]
-unifi-led = "start:main"
+unifi-led = "unifi_led_api.cli:main"
 
-[tool.setuptools]
-py-modules = ["start", "led_logic", "grab_token", "app_config", "retry"]
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
