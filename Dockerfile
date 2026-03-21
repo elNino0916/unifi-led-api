@@ -5,10 +5,11 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy project metadata first for better layer caching
+COPY pyproject.toml README.md ./
+COPY *.py ./
 
-COPY . .
+RUN pip install --no-cache-dir .
 
 # Give the appuser ownership so it can write payload JSON files
 RUN chown -R appuser:appuser /app
@@ -19,6 +20,7 @@ USER appuser
 # Examples:
 #   docker run --env-file .env unifi-led-api led on
 #   docker run --env-file .env unifi-led-api led off
+#   docker run --env-file .env unifi-led-api status
 #   docker run --env-file .env unifi-led-api fetch-config
 ENTRYPOINT ["python", "start.py"]
 CMD ["--help"]

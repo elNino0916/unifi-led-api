@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unifi-led-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Control UniFi Access Point LEDs via the internal REST API."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -17,6 +17,7 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.0.0",
     "aresponses>=3.0.0",
     "ruff>=0.1.0",
 ]
@@ -25,7 +26,7 @@ dev = [
 unifi-led = "start:main"
 
 [tool.setuptools]
-py-modules = ["start", "led_logic", "grab_token"]
+py-modules = ["start", "led_logic", "grab_token", "app_config", "retry"]
 
 [tool.ruff]
 line-length = 100
@@ -47,3 +48,6 @@ ignore = []
 [tool.ruff.format]
 docstring-code-format = true
 quote-style = "double"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

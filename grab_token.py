@@ -10,7 +10,8 @@ import sys
 
 import aiohttp
 
-from config import AppConfig
+from app_config import AppConfig
+from retry import async_retry
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ async def _login(session: aiohttp.ClientSession, config: AppConfig):
     """Try to log in using the new and old UniFi login endpoints."""
     login_urls = [
         f"{config.controller}/api/auth/login",  # UniFi OS / newer
-        f"{config.controller}/api/login",       # legacy
+        f"{config.controller}/api/login",  # legacy
     ]
 
     payload = {
@@ -33,7 +34,7 @@ async def _login(session: aiohttp.ClientSession, config: AppConfig):
     for url in login_urls:
         logger.debug("Trying login URL: %s", url)
         try:
-            async with session.post(url, json=payload, timeout=10) as resp:
+            async with session.post(url, json=payload, timeout=config.timeout) as resp:
                 logger.debug("Login response status: %s", resp.status)
                 if not resp.ok:
                     text = await resp.text()
@@ -55,7 +56,7 @@ async def _get_csrf(session: aiohttp.ClientSession, config: AppConfig) -> str:
     """Fetch CSRF token via /proxy/network/api/self."""
     url = f"{config.controller}/proxy/network/api/self"
     logger.debug("Fetching CSRF from: %s", url)
-    async with session.get(url, timeout=10) as r:
+    async with session.get(url, timeout=config.timeout) as r:
         logger.debug("CSRF fetch status: %s", r.status)
 
         csrf = r.headers.get("x-csrf-token")
@@ -90,20 +91,16 @@ async def get_session(config: AppConfig) -> tuple[aiohttp.ClientSession, str]:
         headers={
             "Accept": "application/json, text/plain, */*",
             "Content-Type": "application/json",
-        }
+        },
     )
 
     try:
-        # Simple retry loop for authentication
-        for attempt in range(3):
-            try:
-                await _login(session, config)
-                break
-            except Exception as e:
-                if attempt == 2:
-                    raise
-                logger.warning("Login try %d failed, retrying... (%s)", attempt + 1, e)
-                await asyncio.sleep(1)
+        await async_retry(
+            lambda: _login(session, config),
+            retries=3,
+            delay=1.0,
+            description="Login",
+        )
 
         # Check if the TOKEN cookie is natively in the jar
         has_token = any(cookie.key == "TOKEN" for cookie in session.cookie_jar)
@@ -126,13 +123,6 @@ async def get_session(config: AppConfig) -> tuple[aiohttp.ClientSession, str]:
         logger.error("  Username  : %s", config.user)
         await session.close()
         raise
-
-    csrf = await _get_csrf(session, config)
-    logger.debug("CSRF token acquired.")
-
-    session.headers.update({"x-csrf-token": csrf})
-
-    return session, csrf
 
 
 async def async_main():

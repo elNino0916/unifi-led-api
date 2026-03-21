@@ -4,13 +4,14 @@ led_logic.py
 LED-related operations for UniFi devices via aiohttp.
 """
 
-import asyncio
 import copy
 import json
 import logging
 from pathlib import Path
 
 import aiohttp
+
+from retry import async_retry
 
 logger = logging.getLogger(__name__)
 
@@ -30,25 +31,22 @@ async def push_led_payload(
     site: str,
     device_id: str,
     body: dict,
+    *,
+    timeout: int = 10,
 ):
     """Send the provided body as the new device document async."""
     body["_id"] = device_id
     url = f"{controller}/proxy/network/api/s/{site}/rest/device/{device_id}"
 
-    for attempt in range(3):
-        try:
-            async with session.put(url, json=body, timeout=10) as r:
-                logger.debug("PUT %s", url)
-                logger.debug("Status: %s", r.status)
-                text = await r.text()
-                logger.debug("Response: %s", text[:300])
-                r.raise_for_status()
-                return
-        except Exception as e:
-            if attempt == 2:
-                raise
-            logger.warning("PUT payload try %d failed, retrying... (%s)", attempt + 1, e)
-            await asyncio.sleep(1)
+    async def _put():
+        async with session.put(url, json=body, timeout=timeout) as r:
+            logger.debug("PUT %s", url)
+            logger.debug("Status: %s", r.status)
+            text = await r.text()
+            logger.debug("Response: %s", text[:300])
+            r.raise_for_status()
+
+    await async_retry(_put, retries=3, delay=1.0, description=f"PUT device {device_id}")
 
 
 async def fetch_device_config(
@@ -56,36 +54,35 @@ async def fetch_device_config(
     controller: str,
     site: str,
     device_id: str,
+    *,
+    timeout: int = 10,
 ) -> dict:
     """Fetch the current device configuration from the UniFi controller async."""
     url = f"{controller}/proxy/network/api/s/{site}/stat/device"
 
-    for attempt in range(3):
-        try:
-            logger.debug("Fetching device list from: %s", url)
-            async with session.get(url, timeout=10) as r:
-                logger.debug("Fetch status: %s", r.status)
-                r.raise_for_status()
-                data = await r.json()
-                break
-        except Exception as e:
-            if attempt == 2:
-                raise
-            logger.warning("GET device config try %d failed, retrying... (%s)", attempt + 1, e)
-            await asyncio.sleep(1)
+    async def _get():
+        logger.debug("Fetching device list from: %s", url)
+        async with session.get(url, timeout=timeout) as r:
+            logger.debug("Fetch status: %s", r.status)
+            r.raise_for_status()
+            return await r.json()
+
+    data = await async_retry(_get, retries=3, delay=1.0, description="GET device config")
 
     devices = data.get("data", [])
 
     for device in devices:
         if device.get("_id") == device_id:
-            logger.info("Found device: %s (%s)", device.get('name', 'unnamed'), device_id)
+            logger.info("Found device: %s (%s)", device.get("name", "unnamed"), device_id)
             return device
 
-    available = ", ".join(f"{d.get('name','?')} ({d.get('_id','?')})" for d in devices)
-    raise RuntimeError(
-        f"No device found with ID '{device_id}'.\n"
-        f"Available devices: {available}"
-    )
+    available = ", ".join(f"{d.get('name', '?')} ({d.get('_id', '?')})" for d in devices)
+    raise RuntimeError(f"No device found with ID '{device_id}'.\nAvailable devices: {available}")
+
+
+def get_led_status(config: dict) -> str:
+    """Return the current led_override value from a device config dict."""
+    return config.get("led_override", "unknown")
 
 
 def generate_led_payloads(
@@ -98,10 +95,19 @@ def generate_led_payloads(
     """
     # Fields safe to include in the PUT payload
     KEEP_FIELDS = [
-        "name", "snmp_contact", "snmp_location", "mgmt_network_id",
-        "afc_enabled", "outdoor_mode_override",
-        "led_override", "led_override_color", "led_override_color_brightness",
-        "atf_enabled", "config_network", "mesh_sta_vap_enabled", "radio_table",
+        "name",
+        "snmp_contact",
+        "snmp_location",
+        "mgmt_network_id",
+        "afc_enabled",
+        "outdoor_mode_override",
+        "led_override",
+        "led_override_color",
+        "led_override_color_brightness",
+        "atf_enabled",
+        "config_network",
+        "mesh_sta_vap_enabled",
+        "radio_table",
     ]
 
     payload = {}

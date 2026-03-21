@@ -23,6 +23,8 @@ Tested on U7 Pro and U6+.
 - **Auto-config** — device config is fetched live on every run, so payloads are never stale
 - **Per-device payloads** — each AP gets its own config files (`led_on_{id}.json` / `led_off_{id}.json`)
 - **Multiple device support** — control several APs with one command
+- **LED status** — check the current LED state without making changes
+- **Dry-run mode** — preview payloads before sending
 - **Cross-platform config** — `.env` file works on Linux, macOS, and Windows
 - Works with UniFi OS and legacy controllers
 - Simple command-line interface with `--help` support
@@ -52,8 +54,8 @@ intended devices to be managed. This makes it suitable for long-term automation,
 
 ## Requirements
 
-- Python 3.6+
-- `requests` library
+- Python 3.9+
+- `aiohttp` library (installed automatically)
 - A UniFi Controller with API access
 - A local UniFi user account (no 2FA)
 
@@ -69,7 +71,12 @@ intended devices to be managed. This makes it suitable for long-term automation,
 
 2. Install dependencies:
    ```bash
-   pip3 install -r requirements.txt
+   pip install .
+   ```
+
+   Or for development (includes linting and test tools):
+   ```bash
+   pip install -e ".[dev]"
    ```
 
 ### With Docker
@@ -115,6 +122,7 @@ https://<controller-ip>/network/default/devices/properties/device/<DEVICE_ID>/ge
 | `UNIFI_DEVICE_ID` | Yes | — | Device ID (comma-separated for multiple) |
 | `UNIFI_SITE` | No | `default` | UniFi site name |
 | `UNIFI_VERIFY_SSL` | No | `false` | Set to `true` for valid SSL certs |
+| `UNIFI_TIMEOUT` | No | `10` | HTTP request timeout in seconds |
 
 ### Multiple devices
 
@@ -131,6 +139,7 @@ Each device gets its own per-device config files and all are updated in a single
 ```
 python3 start.py --help
 python3 start.py led --help
+python3 start.py status --help
 python3 start.py fetch-config --help
 ```
 
@@ -149,6 +158,22 @@ python3 start.py led off
 > [!NOTE]
 > Every `led on/off` command automatically fetches the latest device config before pushing.
 > This means config files are always up-to-date — no manual regeneration needed after firmware updates or config changes.
+
+### Preview payload (dry-run)
+
+```bash
+python3 start.py led on --dry-run
+```
+
+Shows the JSON payload that would be sent, without actually making any changes. Useful for debugging and first-time verification.
+
+### Check LED status
+
+```bash
+python3 start.py status
+```
+
+Displays the current `led_override` state for each configured device. No changes are made.
 
 ### Preview config without changing LEDs
 
@@ -184,6 +209,12 @@ docker run --rm --env-file .env ghcr.io/elnino0916/unifi-led-api:main led off
 # Turn LEDs on
 docker run --rm --env-file .env ghcr.io/elnino0916/unifi-led-api:main led on
 
+# Check LED status
+docker run --rm --env-file .env ghcr.io/elnino0916/unifi-led-api:main status
+
+# Preview payload (dry-run)
+docker run --rm --env-file .env ghcr.io/elnino0916/unifi-led-api:main led on --dry-run
+
 # Preview config
 docker run --rm --env-file .env -v $(pwd):/app ghcr.io/elnino0916/unifi-led-api:main fetch-config
 ```
@@ -193,6 +224,20 @@ Docker cron example:
 ```bash
 0 22 * * * docker run --rm --env-file /path/to/.env ghcr.io/elnino0916/unifi-led-api:main led off
 0 7  * * * docker run --rm --env-file /path/to/.env ghcr.io/elnino0916/unifi-led-api:main led on
+```
+
+### Docker Compose (automated scheduling)
+
+A `docker-compose.yml` is included that uses [ofelia](https://github.com/mcuadros/ofelia) for cron-based scheduling:
+
+```bash
+docker compose up -d
+```
+
+By default, LEDs turn off at 22:00 and on at 07:00. Customize the schedules via environment variables:
+
+```bash
+CRON_LED_OFF="0 0 23 * * *" CRON_LED_ON="0 0 6 * * *" docker compose up -d
 ```
 
 ## LED Payload Files

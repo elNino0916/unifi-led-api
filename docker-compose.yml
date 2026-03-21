@@ -1,0 +1,40 @@
+# docker-compose.yml
+# Example: automated LED scheduling using ofelia (cron for Docker).
+#
+# Usage:
+#   1. Copy .env.example to .env and fill in your values.
+#   2. docker compose up -d
+#
+# This will:
+#   - Turn LEDs OFF every night at 22:00
+#   - Turn LEDs ON every morning at 07:00
+#
+# Adjust the cron schedules via the CRON_LED_OFF and CRON_LED_ON variables below.
+
+services:
+  # --- Scheduler -----------------------------------------------------------
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: unifi-led-scheduler
+    restart: unless-stopped
+    depends_on:
+      - unifi-led
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # --- LED worker ----------------------------------------------------------
+  unifi-led:
+    build: .
+    image: ghcr.io/elnino0916/unifi-led-api:main
+    container_name: unifi-led
+    env_file: .env
+    # Keep the container alive so ofelia can exec into it
+    entrypoint: ["tail", "-f", "/dev/null"]
+    labels:
+      # Turn LEDs OFF at 22:00 every day
+      ofelia.job-exec.led-off.schedule: "${CRON_LED_OFF:-0 0 22 * * *}"
+      ofelia.job-exec.led-off.command: "python start.py led off"
+      # Turn LEDs ON at 07:00 every day
+      ofelia.job-exec.led-on.schedule: "${CRON_LED_ON:-0 0 7 * * *}"
+      ofelia.job-exec.led-on.command: "python start.py led on"
