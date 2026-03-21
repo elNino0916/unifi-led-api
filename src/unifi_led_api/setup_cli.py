@@ -11,9 +11,11 @@ async def run_setup(base_dir: Path):
 
     env_file = base_dir / ".env"
     if env_file.exists():
-        ans = input(
-            "An existing .env file was found. Do you want to overwrite it? [y/N]: "
-        ).strip().lower()
+        ans = (
+            input("An existing .env file was found. Do you want to overwrite it? [y/N]: ")
+            .strip()
+            .lower()
+        )
         if ans not in ("y", "yes"):
             print("Setup cancelled.")
             return
@@ -46,7 +48,7 @@ async def run_setup(base_dir: Path):
         device_ids=[],
         site=site,
         verify_ssl=verify_ssl,
-        timeout=10
+        timeout=10,
     )
 
     try:
@@ -104,7 +106,7 @@ async def run_setup(base_dir: Path):
                             "not appear to natively support LED toggling."
                         )
                 else:
-                    print(f"Warning: Selection '{idx+1}' is out of range and will be ignored.")
+                    print(f"Warning: Selection '{idx + 1}' is out of range and will be ignored.")
         except ValueError:
             sys.exit("Invalid selection format. Must be comma-separated numbers.")
 
@@ -119,8 +121,8 @@ UNIFI_CONTROLLER={controller}
 UNIFI_USER={user}
 UNIFI_PASS={password}
 UNIFI_SITE={site}
-UNIFI_VERIFY_SSL={'true' if verify_ssl else 'false'}
-UNIFI_DEVICE_ID={','.join(selected_ids)}
+UNIFI_VERIFY_SSL={"true" if verify_ssl else "false"}
+UNIFI_DEVICE_ID={",".join(selected_ids)}
 """
     env_file.write_text(env_content, encoding="utf-8")
 

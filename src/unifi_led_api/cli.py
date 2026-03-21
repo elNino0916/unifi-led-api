@@ -87,7 +87,7 @@ async def process_device(
             logging.warning(
                 "Device '%s' lacks native LED override explicitly. "
                 "Skipping to prevent Gateway/Switch corruption.",
-                dev_cfg.get("name", device_id)
+                dev_cfg.get("name", device_id),
             )
             return
 
@@ -201,6 +201,7 @@ async def async_main(args):
 
     if args.command == "setup":
         from unifi_led_api import setup_cli
+
         await setup_cli.run_setup(base_dir)
         return
 
@@ -217,9 +218,7 @@ async def async_main(args):
 
         if args.command == "discover":
             logging.info(
-                "Discovering devices on controller %s (site: %s)",
-                config.controller,
-                config.site
+                "Discovering devices on controller %s (site: %s)", config.controller, config.site
             )
             devices = await led_logic.discover_devices(
                 session, config.controller, config.site, timeout=config.timeout

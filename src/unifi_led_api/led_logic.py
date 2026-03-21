@@ -107,8 +107,12 @@ def get_led_status(config: dict) -> str:
 
 
 def generate_led_payloads(
-    config: dict, base_dir: Path, device_id: str, write_files: bool = True,
-    color: str | None = None, brightness: int | None = None
+    config: dict,
+    base_dir: Path,
+    device_id: str,
+    write_files: bool = True,
+    color: str | None = None,
+    brightness: int | None = None,
 ) -> tuple[dict, dict]:
     """
     Generate per-device led_on and led_off dict payloads from a device config.

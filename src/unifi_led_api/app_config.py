@@ -15,10 +15,7 @@ class AppConfig(BaseSettings):
     timeout: int = Field(10, alias="UNIFI_TIMEOUT")
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        populate_by_name=True
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", populate_by_name=True
     )
 
     @field_validator("device_ids", mode="before")
