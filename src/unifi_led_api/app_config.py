@@ -1,9 +1,9 @@
 import sys
+from typing import Any
+
 from pydantic import Field, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
-from typing import Any
 
 class AppConfig(BaseSettings):
     controller: str = Field(..., alias="UNIFI_CONTROLLER")
@@ -15,8 +15,8 @@ class AppConfig(BaseSettings):
     timeout: int = Field(10, alias="UNIFI_TIMEOUT")
 
     model_config = SettingsConfigDict(
-        env_file=".env", 
-        env_file_encoding="utf-8", 
+        env_file=".env",
+        env_file_encoding="utf-8",
         extra="ignore",
         populate_by_name=True
     )
@@ -32,7 +32,7 @@ class AppConfig(BaseSettings):
     @classmethod
     def strip_controller_slash(cls, v: str) -> str:
         return v.strip().rstrip("/")
-        
+
     @field_validator("user", "password", mode="after")
     @classmethod
     def strip_whitespace(cls, v: str) -> str:
