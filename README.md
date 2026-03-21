@@ -24,7 +24,7 @@ Tested on U7 Pro and U6+.
 - **Auto-Discovery** — finds all UniFi APs and checks LED toggle compatibility easily
 - **Webhook API Server** — built-in HTTP server explicitly designed to integrate with Node-RED, Home Assistant, etc.
 - **Device Groups** — create custom zones like `upstairs` or `downstairs` using `groups.json`
-- **CLI Color & Brightness** — supported on older models via `--color` and `--brightness`
+- **CLI Color & Brightness** — supported on some AP models via `--color` and `--brightness`
 - **Auto-config** — device config is fetched live on every run, so payloads are never stale
 - **Per-device payloads** — each AP gets its own config files (`led_on_{id}.json` / `led_off_{id}.json`)
 - **Multiple device support** — control several APs with one command or webhook
