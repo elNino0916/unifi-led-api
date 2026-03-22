@@ -126,8 +126,8 @@ def generate_led_payloads(
             f"FATAL: Device '{config.get('name', device_id)}' does not natively "
             "support LED toggling because the 'led_override' key is missing from "
             "its firmware config. Pushing this payload would wipe out critical "
-            "Gateway/Switch configuration data and cause the UniFi OS watchdog "
-            "to crash and reboot your router. Operation aborted."
+            "Gateway/Switch configuration data and cause UniFi OS"
+            "to crash. Operation aborted."
         )
     # Fields safe to include in the PUT payload
     KEEP_FIELDS = [

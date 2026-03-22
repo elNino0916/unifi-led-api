@@ -21,7 +21,7 @@ async def run_setup(base_dir: Path):
             return
 
     print("\nPlease enter your UniFi Controller details.")
-    controller = input("Controller URL (e.g. https://192.168.1.1): ").strip()
+    controller = input("Controller URL (e.g. https://unifi or https://192.168.1.1): ").strip()
     if not controller:
         sys.exit("Controller URL is required.")
 
@@ -35,7 +35,7 @@ async def run_setup(base_dir: Path):
 
     site = input("Site ID [default]: ").strip() or "default"
 
-    verify_ssl_ans = input("Verify SSL Certificate? [y/N]: ").strip().lower()
+    verify_ssl_ans = input("Verify SSL Certificate? [default: N] [y/N]: ").strip().lower()
     verify_ssl = verify_ssl_ans in ("y", "yes")
 
     print("\nStarting device discovery...")
