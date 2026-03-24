@@ -15,8 +15,9 @@ This project fills that gap with a lightweight, reliable Python-based API that s
 Tested on U7 Pro and U6+.
 
 > [!NOTE]  
-> Modern UniFi APs (U6/U7 series) support LED override ON/OFF only.  
+> U6 UniFi APs support LED override ON/OFF only.  
 > Color and brightness overrides are ignored by firmware.
+> Brightness is only available on U7 series, color only on older APs.
 
 ## Features
 
